@@ -1,0 +1,155 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calendar-plus"></i> {{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="appointment-form">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.patient.id_for_label }}" class="form-label">
+                                    Patient <span class="text-danger">*</span>
+                                </label> {{ form.patient }} {% if form.patient.errors %}
+                                <div class="text-danger small">{{ form.patient.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.doctor.id_for_label }}" class="form-label">
+                                    Doctor <span class="text-danger">*</span>
+                                </label> {{ form.doctor }} {% if form.doctor.errors %}
+                                <div class="text-danger small">{{ form.doctor.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.appointment_date.id_for_label }}" class="form-label">
+                                    Appointment Date <span class="text-danger">*</span>
+                                </label> {{ form.appointment_date }} {% if form.appointment_date.errors %}
+                                <div class="text-danger small">{{ form.appointment_date.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.appointment_time.id_for_label }}" class="form-label">
+                                    Appointment Time <span class="text-danger">*</span>
+                                </label> {{ form.appointment_time }} {% if form.appointment_time.errors %}
+                                <div class="text-danger small">{{ form.appointment_time.errors }}</div>
+                                {% endif %}
+                                <div id="available-slots" class="mt-2"></div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.duration.id_for_label }}" class="form-label">
+                                    Duration (minutes) <span class="text-danger">*</span>
+                                </label> {{ form.duration }} {% if form.duration.errors %}
+                                <div class="text-danger small">{{ form.duration.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.appointment_type.id_for_label }}" class="form-label">
+                                    Appointment Type <span class="text-danger">*</span>
+                                </label> {{ form.appointment_type }} {% if form.appointment_type.errors %}
+                                <div class="text-danger small">{{ form.appointment_type.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.reason_for_visit.id_for_label }}" class="form-label">
+                                    Reason for Visit <span class="text-danger">*</span>
+                                </label> {{ form.reason_for_visit }} {% if form.reason_for_visit.errors %}
+                                <div class="text-danger small">{{ form.reason_for_visit.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.symptoms.id_for_label }}" class="form-label">Symptoms</label> {{ form.symptoms }} {% if form.symptoms.errors %}
+                                <div class="text-danger small">{{ form.symptoms.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.special_instructions.id_for_label }}" class="form-label">
+                                    Special Instructions
+                                </label> {{ form.special_instructions }} {% if form.special_instructions.errors %}
+                                <div class="text-danger small">{{ form.special_instructions.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <hr>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> {{ button_text }}
+                        </button>
+                        <a href="{% url 'frontdesk:appointment_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Check available slots when doctor and date are selected
+        function checkAvailableSlots() {
+            var doctorId = $('#{{ form.doctor.id_for_label }}').val();
+            var appointmentDate = $('#{{ form.appointment_date.id_for_label }}').val();
+
+            if (doctorId && appointmentDate) {
+                $.ajax({
+                    url: '{% url "frontdesk:available_slots_ajax" %}',
+                    data: {
+                        'doctor_id': doctorId,
+                        'date': appointmentDate
+                    },
+                    success: function(data) {
+                        var slotsHtml = '';
+                        if (data.available && data.slots.length > 0) {
+                            slotsHtml = '<small class="text-success"><i class="bi bi-check-circle"></i> Available slots:</small><br>';
+                            slotsHtml += '<div class="btn-group btn-group-sm flex-wrap mt-1">';
+                            data.slots.forEach(function(slot) {
+                                if (slot.available) {
+                                    slotsHtml += '<button type="button" class="btn btn-outline-primary btn-sm slot-btn" data-time="' + slot.time + '">' + slot.time + '</button> ';
+                                }
+                            });
+                            slotsHtml += '</div>';
+                        } else {
+                            slotsHtml = '<small class="text-danger"><i class="bi bi-exclamation-circle"></i> No available slots for this date</small>';
+                        }
+                        $('#available-slots').html(slotsHtml);
+                    },
+                    error: function() {
+                        $('#available-slots').html('<small class="text-muted">Unable to load available slots</small>');
+                    }
+                });
+            }
+        }
+
+        // Auto-fill time when slot button is clicked
+        $(document).on('click', '.slot-btn', function() {
+            var time = $(this).data('time');
+            $('#{{ form.appointment_time.id_for_label }}').val(time);
+            $('.slot-btn').removeClass('active');
+            $(this).addClass('active');
+        });
+
+        $('#{{ form.doctor.id_for_label }}, #{{ form.appointment_date.id_for_label }}').change(checkAvailableSlots);
+    });
+</script>
+{% endblock %}

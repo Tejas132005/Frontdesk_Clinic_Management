@@ -1,0 +1,51 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-circle"></i> My Profile</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Username</label>
+                            <p class="mb-0"><strong>{{ request.user.username }}</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Full Name</label>
+                            <p class="mb-0">{{ request.user.get_full_name }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Email</label>
+                            <p class="mb-0">{{ request.user.email }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Phone Number</label>
+                            <p class="mb-0">{{ request.user.phone_number|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">User Type</label>
+                            <p class="mb-0">{{ request.user.get_user_type_display }}</p>
+                        </div>
+                        {% if staff_profile %}
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Employee ID</label>
+                            <p class="mb-0">{{ staff_profile.employee_id }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Shift</label>
+                            <p class="mb-0">{{ staff_profile.get_shift_display }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Department</label>
+                            <p class="mb-0">{{ staff_profile.department }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

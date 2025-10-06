@@ -1,0 +1,202 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-calendar-check"></i> Appointment Details</h4>
+        <a href="{% url 'frontdesk:appointment_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Appointment Information -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Appointment Information</span>
+                    <span class="badge bg-{{ appointment.status }} fs-6">
+                        {% if appointment.status == 'scheduled' %}bg-secondary
+                        {% elif appointment.status == 'confirmed' %}bg-primary
+                        {% elif appointment.status == 'checked_in' %}bg-info
+                        {% elif appointment.status == 'completed' %}bg-success
+                        {% elif appointment.status == 'cancelled' %}bg-danger
+                        {% endif %}">
+                        {{ appointment.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Appointment ID</label>
+                            <p class="mb-0"><strong>{{ appointment.appointment_id }}</strong></p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Type</label>
+                            <p class="mb-0">{{ appointment.get_appointment_type_display }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Date</label>
+                            <p class="mb-0">{{ appointment.appointment_date|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Time</label>
+                            <p class="mb-0">{{ appointment.appointment_time|time:"g:i A" }} ({{ appointment.duration }} min)</p>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="text-muted small">Reason for Visit</label>
+                            <p class="mb-0">{{ appointment.reason_for_visit }}</p>
+                        </div>
+                        {% if appointment.symptoms %}
+                        <div class="col-12 mb-3">
+                            <label class="text-muted small">Symptoms</label>
+                            <p class="mb-0">{{ appointment.symptoms }}</p>
+                        </div>
+                        {% endif %} {% if appointment.special_instructions %}
+                        <div class="col-12 mb-3">
+                            <label class="text-muted small">Special Instructions</label>
+                            <p class="mb-0">{{ appointment.special_instructions }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="card mt-4">
+                <div class="card-header">Patient Information</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Patient Name</label>
+                            <p class="mb-0">
+                                <strong>{{ appointment.patient.get_full_name }}</strong>
+                                <a href="{% url 'frontdesk:patient_detail' appointment.patient.pk %}" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="bi bi-eye"></i> View Profile
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Patient ID</label>
+                            <p class="mb-0">{{ appointment.patient.patient_id }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Phone Number</label>
+                            <p class="mb-0">{{ appointment.patient.phone_number }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Email</label>
+                            <p class="mb-0">{{ appointment.patient.email|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor Information -->
+            <div class="card mt-4">
+                <div class="card-header">Doctor Information</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Doctor Name</label>
+                            <p class="mb-0">
+                                <strong>Dr. {{ appointment.doctor.full_name }}</strong>
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Specialization</label>
+                            <p class="mb-0">{{ appointment.doctor.specialization }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Location</label>
+                            <p class="mb-0">{{ appointment.doctor.clinic_location }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Phone</label>
+                            <p class="mb-0">{{ appointment.doctor.phone_number }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions & Timeline -->
+        <div class="col-md-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">Quick Actions</div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if appointment.status == 'scheduled' %}
+                        <a href="{% url 'frontdesk:appointment_confirm' appointment.pk %}" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Confirm Appointment
+                        </a>
+                        {% endif %} {% if appointment.status in 'scheduled,confirmed' %}
+                        <a href="{% url 'frontdesk:appointment_checkin' appointment.pk %}" class="btn btn-info">
+                            <i class="bi bi-person-check"></i> Check In Patient
+                        </a>
+                        {% endif %} {% if appointment.status in 'checked_in,in_progress' %}
+                        <a href="{% url 'frontdesk:appointment_complete' appointment.pk %}" class="btn btn-success">
+                            <i class="bi bi-check-circle-fill"></i> Mark Completed
+                        </a>
+                        {% endif %} {% if appointment.can_reschedule %}
+                        <a href="{% url 'frontdesk:appointment_reschedule' appointment.pk %}" class="btn btn-warning">
+                            <i class="bi bi-calendar-event"></i> Reschedule
+                        </a>
+                        {% endif %} {% if appointment.can_cancel %}
+                        <a href="{% url 'frontdesk:appointment_cancel' appointment.pk %}" class="btn btn-danger">
+                            <i class="bi bi-x-circle"></i> Cancel Appointment
+                        </a>
+                        {% endif %}
+
+                        <a href="{% url 'frontdesk:appointment_edit' appointment.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-pencil"></i> Edit Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="card">
+                <div class="card-header">Timeline</div>
+                <div class="card-body">
+                    <ul class="list-unstyled timeline">
+                        <li class="mb-3">
+                            <small class="text-muted">Scheduled</small><br>
+                            <strong>{{ appointment.scheduled_at|date:"M d, Y g:i A" }}</strong> {% if appointment.scheduled_by %}
+                            <br><small>by {{ appointment.scheduled_by.user.get_full_name }}</small> {% endif %}
+                        </li>
+
+                        {% if appointment.confirmed_at %}
+                        <li class="mb-3">
+                            <small class="text-muted">Confirmed</small><br>
+                            <strong>{{ appointment.confirmed_at|date:"M d, Y g:i A" }}</strong>
+                        </li>
+                        {% endif %} {% if appointment.checked_in_at %}
+                        <li class="mb-3">
+                            <small class="text-muted">Checked In</small><br>
+                            <strong>{{ appointment.checked_in_at|date:"M d, Y g:i A" }}</strong>
+                        </li>
+                        {% endif %} {% if appointment.consultation_start_time %}
+                        <li class="mb-3">
+                            <small class="text-muted">Consultation Started</small><br>
+                            <strong>{{ appointment.consultation_start_time|date:"M d, Y g:i A" }}</strong>
+                        </li>
+                        {% endif %} {% if appointment.consultation_end_time %}
+                        <li class="mb-3">
+                            <small class="text-muted">Consultation Ended</small><br>
+                            <strong>{{ appointment.consultation_end_time|date:"M d, Y g:i A" }}</strong>
+                        </li>
+                        {% endif %} {% if appointment.cancelled_at %}
+                        <li class="mb-3">
+                            <small class="text-muted">Cancelled</small><br>
+                            <strong>{{ appointment.cancelled_at|date:"M d, Y g:i A" }}</strong> {% if appointment.cancelled_by %}
+                            <br><small>by {{ appointment.cancelled_by.user.get_full_name }}</small> {% endif %} {% if appointment.cancellation_reason %}
+                            <br><small class="text-danger">Reason: {{ appointment.cancellation_reason }}</small> {% endif %}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

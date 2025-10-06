@@ -1,0 +1,83 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add Patient to Queue</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.patient.id_for_label }}" class="form-label">
+                                Select Patient <span class="text-danger">*</span>
+                            </label> {{ form.patient }} {% if form.patient.errors %}
+                            <div class="text-danger small">{{ form.patient.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">
+                                Don't see the patient? 
+                                <a href="{% url 'frontdesk:patient_add' %}" target="_blank">Register new patient</a>
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.doctor.id_for_label }}" class="form-label">Assign Doctor (Optional)</label> {{ form.doctor }} {% if form.doctor.errors %}
+                            <div class="text-danger small">{{ form.doctor.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Leave empty to assign later</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">
+                                Priority <span class="text-danger">*</span>
+                            </label> {{ form.priority }} {% if form.priority.errors %}
+                            <div class="text-danger small">{{ form.priority.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.reason_for_visit.id_for_label }}" class="form-label">
+                                Reason for Visit <span class="text-danger">*</span>
+                            </label> {{ form.reason_for_visit }} {% if form.reason_for_visit.errors %}
+                            <div class="text-danger small">{{ form.reason_for_visit.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Additional Notes</label> {{ form.notes }} {% if form.notes.errors %}
+                            <div class="text-danger small">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <hr>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Add to Queue
+                        </button>
+                        <a href="{% url 'frontdesk:queue_management' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+    // Initialize Select2 for better dropdowns (optional, requires Select2 library)
+    $(document).ready(function() {
+        $('#{{ form.patient.id_for_label }}').select2({
+            placeholder: 'Search for a patient...',
+            allowClear: true
+        });
+
+        $('#{{ form.doctor.id_for_label }}').select2({
+            placeholder: 'Select a doctor...',
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}

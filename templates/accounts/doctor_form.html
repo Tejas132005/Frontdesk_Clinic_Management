@@ -1,0 +1,163 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-badge"></i> {{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3"><i class="bi bi-info-circle"></i> Basic Information</h6>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.doctor_id.id_for_label }}" class="form-label">
+                                    Doctor ID <span class="text-danger">*</span>
+                                </label> {{ form.doctor_id }} {% if form.doctor_id.errors %}
+                                <div class="text-danger small">{{ form.doctor_id.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                                    Full Name <span class="text-danger">*</span>
+                                </label> {{ form.full_name }} {% if form.full_name.errors %}
+                                <div class="text-danger small">{{ form.full_name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.specialization.id_for_label }}" class="form-label">
+                                    Specialization <span class="text-danger">*</span>
+                                </label> {{ form.specialization }} {% if form.specialization.errors %}
+                                <div class="text-danger small">{{ form.specialization.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.gender.id_for_label }}" class="form-label">
+                                    Gender <span class="text-danger">*</span>
+                                </label> {{ form.gender }} {% if form.gender.errors %}
+                                <div class="text-danger small">{{ form.gender.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="col-12 mt-3">
+                                <h6 class="text-primary mb-3"><i class="bi bi-telephone"></i> Contact Information</h6>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                    Phone Number <span class="text-danger">*</span>
+                                </label> {{ form.phone_number }} {% if form.phone_number.errors %}
+                                <div class="text-danger small">{{ form.phone_number.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    Email <span class="text-danger">*</span>
+                                </label> {{ form.email }} {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.clinic_location.id_for_label }}" class="form-label">
+                                    Clinic Location <span class="text-danger">*</span>
+                                </label> {{ form.clinic_location }} {% if form.clinic_location.errors %}
+                                <div class="text-danger small">{{ form.clinic_location.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Professional Details -->
+                            <div class="col-12 mt-3">
+                                <h6 class="text-primary mb-3"><i class="bi bi-award"></i> Professional Details</h6>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.license_number.id_for_label }}" class="form-label">
+                                    License Number <span class="text-danger">*</span>
+                                </label> {{ form.license_number }} {% if form.license_number.errors %}
+                                <div class="text-danger small">{{ form.license_number.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.years_of_experience.id_for_label }}" class="form-label">
+                                    Years of Experience <span class="text-danger">*</span>
+                                </label> {{ form.years_of_experience }} {% if form.years_of_experience.errors %}
+                                <div class="text-danger small">{{ form.years_of_experience.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.qualifications.id_for_label }}" class="form-label">Qualifications</label> {{ form.qualifications }} {% if form.qualifications.errors %}
+                                <div class="text-danger small">{{ form.qualifications.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label> {{ form.bio }} {% if form.bio.errors %}
+                                <div class="text-danger small">{{ form.bio.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Availability & Pricing -->
+                            <div class="col-12 mt-3">
+                                <h6 class="text-primary mb-3"><i class="bi bi-calendar-check"></i> Availability & Pricing</h6>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.consultation_fee.id_for_label }}" class="form-label">
+                                    Consultation Fee <span class="text-danger">*</span>
+                                </label> {{ form.consultation_fee }} {% if form.consultation_fee.errors %}
+                                <div class="text-danger small">{{ form.consultation_fee.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check mt-4">
+                                    {{ form.is_available }}
+                                    <label class="form-check-label" for="{{ form.is_available.id_for_label }}">
+                                        Is Available
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check mt-4">
+                                    {{ form.accepts_walkins }}
+                                    <label class="form-check-label" for="{{ form.accepts_walkins.id_for_label }}">
+                                        Accepts Walk-ins
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <hr>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> {{ button_text }}
+                                </button>
+                                <a href="{% url 'accounts:doctor_list' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

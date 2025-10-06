@@ -1,0 +1,332 @@
+{% extends 'base.html' %} {% load static %} {% block title %}{{ title }}{% endblock %} {% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👨‍⚕️ Doctors</h2>
+        <a href="{% url 'accounts:doctor_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Doctor
+        </a>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, ID, or specialization" value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="specialization" class="form-select">
+                        <option value="">All Specializations</option>
+                        {% for spec in specializations %}
+                            <option value="{{ spec }}">{{ spec }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" name="location" class="form-control" placeholder="Filter by location">
+                </div>
+                <div class="col-md-2">
+                    <select name="availability" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="available">Available</option>
+                        <option value="unavailable">Unavailable</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="{% url 'accounts:doctor_list' %}" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Doctors Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Doctor ID</th>
+                            <th>Name</th>
+                            <th>Specialization</th>
+                            <th>Location</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th style="width: 200px;">Quick Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doctor in doctors %}
+                        <tr id="doctor-row-{{ doctor.id }}">
+                            <td>{{ doctor.doctor_id }}</td>
+                            <td>
+                                <strong>Dr. {{ doctor.full_name }}</strong><br>
+                                <small class="text-muted">{{ doctor.get_gender_display }}</small>
+                            </td>
+                            <td>{{ doctor.specialization }}</td>
+                            <td>{{ doctor.clinic_location }}</td>
+                            <td>{{ doctor.phone_number }}</td>
+                            <td>
+                                <span class="badge status-badge-{{ doctor.id }}" id="status-badge-{{ doctor.id }}">
+                                    {% if doctor.is_available %}
+                                        <span class="badge bg-success">Available</span> {% else %}
+                                <span class="badge bg-danger">Off Duty</span> {% endif %}
+                                </span>
+                                <br>
+                                <small class="text-muted next-available-{{ doctor.id }}" id="next-available-{{ doctor.id }}"></small>
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm status-dropdown" data-doctor-id="{{ doctor.id }}" data-doctor-name="{{ doctor.full_name }}">
+                                    <option value="">Change Status...</option>
+                                    <option value="available">✅ Available</option>
+                                    <option value="busy">⏳ Busy (With Patient)</option>
+                                    <option value="off_duty">🔴 Off Duty</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'accounts:doctor_detail' doctor.pk %}" class="btn btn-info" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'accounts:doctor_edit' doctor.pk %}" class="btn btn-warning" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'accounts:doctor_delete' doctor.pk %}" class="btn btn-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">No doctors found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="statusToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Status Update</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+            Status updated successfully
+        </div>
+    </div>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Handle status dropdown change
+        $('.status-dropdown').change(function() {
+            var doctorId = $(this).data('doctor-id');
+            var doctorName = $(this).data('doctor-name');
+            var newStatus = $(this).val();
+            var dropdown = $(this);
+
+            if (!newStatus) {
+                return;
+            }
+
+            // Get CSRF token
+            var csrftoken = $('[name=csrfmiddlewaretoken]').val() || getCookie('csrftoken');
+
+            // Show loading state
+            dropdown.prop('disabled', true);
+
+            $.ajax({
+                url: '/accounts/doctors/' + doctorId + '/quick-status/',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: {
+                    'status': newStatus
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update badge
+                        var badgeHtml = '';
+                        var badgeClass = '';
+
+                        if (newStatus === 'available') {
+                            badgeHtml = '<span class="badge bg-success">Available</span>';
+                            badgeClass = 'success';
+                        } else if (newStatus === 'busy') {
+                            badgeHtml = '<span class="badge bg-warning text-dark">Busy</span>';
+                            badgeClass = 'warning';
+                        } else if (newStatus === 'off_duty') {
+                            badgeHtml = '<span class="badge bg-danger">Off Duty</span>';
+                            badgeClass = 'danger';
+                        }
+
+                        $('#status-badge-' + doctorId).html(badgeHtml);
+
+                        // Update next available
+                        if (response.next_available && newStatus !== 'available') {
+                            $('#next-available-' + doctorId).html(
+                                '<small class="text-muted">Next: ' + response.next_available + '</small>'
+                            );
+                        } else {
+                            $('#next-available-' + doctorId).html('');
+                        }
+
+                        // Show toast notification
+                        showToast(response.message, badgeClass);
+
+                        // Highlight row briefly
+                        $('#doctor-row-' + doctorId).addClass('table-active');
+                        setTimeout(function() {
+                            $('#doctor-row-' + doctorId).removeClass('table-active');
+                        }, 1000);
+
+                    } else {
+                        showToast('Failed to update status', 'danger');
+                    }
+
+                    // Reset dropdown and enable
+                    dropdown.val('');
+                    dropdown.prop('disabled', false);
+                },
+                error: function() {
+                    showToast('Error updating status. Please try again.', 'danger');
+                    dropdown.val('');
+                    dropdown.prop('disabled', false);
+                }
+            });
+        });
+
+        // Function to show toast notification
+        function showToast(message, type) {
+            var toastEl = document.getElementById('statusToast');
+            var toastBody = document.getElementById('toastMessage');
+            var toast = new bootstrap.Toast(toastEl, {
+                animation: true,
+                autohide: true,
+                delay: 3000
+            });
+
+            // Update message and style
+            toastBody.textContent = message;
+            toastEl.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-info');
+
+            if (type === 'success') {
+                toastEl.classList.add('bg-success', 'text-white');
+            } else if (type === 'warning') {
+                toastEl.classList.add('bg-warning');
+            } else if (type === 'danger') {
+                toastEl.classList.add('bg-danger', 'text-white');
+            } else {
+                toastEl.classList.add('bg-info', 'text-white');
+            }
+
+            toast.show();
+        }
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Load next available times on page load
+        loadNextAvailableTimes();
+
+        function loadNextAvailableTimes() {
+            $('.status-dropdown').each(function() {
+                var doctorId = $(this).data('doctor-id');
+                var statusBadge = $('#status-badge-' + doctorId).find('.badge');
+
+                // Only show next available for doctors who are not available
+                if (statusBadge.hasClass('bg-danger') || statusBadge.hasClass('bg-warning')) {
+                    // Make AJAX call to get next availability (you can add this endpoint if needed)
+                    // For now, we'll update it when status changes
+                }
+            });
+        }
+    });
+</script>
+
+<style>
+    .table-active {
+        background-color: rgba(102, 126, 234, 0.1) !important;
+        transition: background-color 0.3s ease;
+    }
+    
+    .status-dropdown {
+        min-width: 180px;
+        font-size: 0.875rem;
+    }
+    
+    .status-dropdown option {
+        padding: 8px;
+    }
+    
+    #statusToast {
+        min-width: 250px;
+    }
+    
+    .toast {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}

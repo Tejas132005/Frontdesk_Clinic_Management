@@ -1,0 +1,261 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+<div class="container-fluid">
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Appointments</h6>
+                        <h2 class="mb-0">{{ stats.total_appointments_today }}</h2>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Completed</h6>
+                        <h2 class="mb-0">{{ stats.completed_appointments }}</h2>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">In Queue</h6>
+                        <h2 class="mb-0">{{ stats.total_in_queue }}</h2>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card danger">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Available Doctors</h6>
+                        <h2 class="mb-0">{{ stats.available_doctors }}</h2>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning-charge"></i> Quick Actions
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'frontdesk:patient_add' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-person-plus"></i> Register Patient
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'frontdesk:queue_add' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-plus-circle"></i> Add to Queue
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'frontdesk:appointment_add' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-calendar-plus"></i> Schedule Appointment
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{% url 'accounts:doctor_add' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-person-badge"></i> Add Doctor
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Current Queue -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-list-ol"></i> Current Queue</span>
+                    <a href="{% url 'frontdesk:queue_management' %}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if current_queue %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Queue #</th>
+                                    <th>Patient</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for queue in current_queue %}
+                                <tr>
+                                    <td><strong>{{ queue.queue_number }}</strong></td>
+                                    <td>{{ queue.patient.get_full_name }}</td>
+                                    <td>
+                                        {% if queue.status == 'waiting' %}
+                                        <span class="badge bg-warning">Waiting</span> {% elif queue.status == 'with_doctor' %}
+                                        <span class="badge bg-info">With Doctor</span> {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge priority-badge {{ queue.priority }}">
+                                                {{ queue.get_priority_display }}
+                                            </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-4">No patients in queue</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Appointments -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-calendar-day"></i> Today's Appointments</span>
+                    <a href="{% url 'frontdesk:appointment_list' %}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for apt in recent_appointments %}
+                                <tr>
+                                    <td><strong>{{ apt.appointment_time|time:"g:i A" }}</strong></td>
+                                    <td>{{ apt.patient.get_full_name }}</td>
+                                    <td>Dr. {{ apt.doctor.full_name }}</td>
+                                    <td>
+                                        {% if apt.status == 'scheduled' %}
+                                        <span class="badge bg-secondary">Scheduled</span> {% elif apt.status == 'confirmed' %}
+                                        <span class="badge bg-primary">Confirmed</span> {% elif apt.status == 'checked_in' %}
+                                        <span class="badge bg-info">Checked In</span> {% elif apt.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span> {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-4">No appointments scheduled for today</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Appointments -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-calendar-range"></i> Upcoming Appointments (Next 3 Days)
+                </div>
+                <div class="card-body">
+                    {% if upcoming_appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for apt in upcoming_appointments %}
+                                <tr>
+                                    <td>{{ apt.appointment_date|date:"M d, Y" }}</td>
+                                    <td>{{ apt.appointment_time|time:"g:i A" }}</td>
+                                    <td>{{ apt.patient.get_full_name }}</td>
+                                    <td>Dr. {{ apt.doctor.full_name }}</td>
+                                    <td>{{ apt.get_appointment_type_display }}</td>
+                                    <td>
+                                        {% if apt.status == 'scheduled' %}
+                                        <span class="badge bg-secondary">Scheduled</span> {% elif apt.status == 'confirmed' %}
+                                        <span class="badge bg-primary">Confirmed</span> {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'frontdesk:appointment_detail' apt.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-4">No upcoming appointments</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block extra_js %}
+
+<script>
+    // Auto-refresh dashboard stats every 30 seconds
+    setInterval(function() {
+        $.ajax({
+            url: '{% url "frontdesk:dashboard_stats_ajax" %}',
+            method: 'GET',
+            success: function(data) {
+                console.log('Dashboard stats updated', data);
+                // Update stats on page without full reload
+            }
+        });
+    }, 30000);
+</script>
+{% endblock %}

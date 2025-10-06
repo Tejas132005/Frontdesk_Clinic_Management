@@ -1,0 +1,302 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}Allo Health{% endblock %} - Front Desk System</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <style>
+         :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #48bb78;
+            --danger-color: #f56565;
+            --warning-color: #ed8936;
+            --info-color: #4299e1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7fafc;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            padding-top: 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar .brand {
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left-color: white;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .top-navbar {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+        
+        .stat-card .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .stat-card.primary .icon {
+            background-color: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .stat-card.success .icon {
+            background-color: rgba(72, 187, 120, 0.1);
+            color: var(--success-color);
+        }
+        
+        .stat-card.warning .icon {
+            background-color: rgba(237, 137, 54, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stat-card.danger .icon {
+            background-color: rgba(245, 101, 101, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .badge {
+            padding: 5px 10px;
+            font-weight: 500;
+        }
+        
+        .table {
+            background: white;
+        }
+        
+        .table thead th {
+            border-bottom: 2px solid #e2e8f0;
+            color: #4a5568;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .priority-badge.normal {
+            background-color: #e6fffa;
+            color: #047857;
+        }
+        
+        .priority-badge.urgent {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .priority-badge.emergency {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            🏥 Allo Health
+        </div>
+        <nav class="nav flex-column">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'frontdesk:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a class="nav-link {% if 'patient' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:patient_list' %}">
+                <i class="bi bi-people"></i> Patients
+            </a>
+            <a class="nav-link {% if 'queue' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:queue_management' %}">
+                <i class="bi bi-list-ol"></i> Queue Management
+            </a>
+            <a class="nav-link {% if 'appointment' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:appointment_list' %}">
+                <i class="bi bi-calendar-check"></i> Appointments
+            </a>
+            <a class="nav-link {% if 'doctor' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'accounts:doctor_list' %}">
+                <i class="bi bi-person-badge"></i> Doctors
+            </a>
+            <a class="nav-link {% if 'availability' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:availability_list' %}">
+                <i class="bi bi-clock"></i> Availability
+            </a>
+            <hr style="border-color: rgba(255,255,255,0.2);">
+            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-circle"></i> My Profile
+            </a>
+            <a class="nav-link" href="{% url 'accounts:logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <div class="top-navbar d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">{% block page_title %}{{ title }}{% endblock %}</h4>
+                <small class="text-muted">Welcome, {{ request.user.get_full_name|default:request.user.username }}</small>
+            </div>
+            <div>
+                <span class="badge bg-light text-dark">
+                    <i class="bi bi-calendar3"></i> {{ today|date:"F d, Y" }}
+                </span>
+                <span class="badge bg-light text-dark ms-2">
+                    <i class="bi bi-clock"></i> <span id="current-time"></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle"></i> {% elif message.tags == 'error' %}
+                <i class="bi bi-exclamation-circle"></i> {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle"></i> {% else %}
+                <i class="bi bi-info-circle"></i> {% endif %} {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery (for AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Custom JS -->
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('current-time').textContent = timeString;
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+
+        // Confirm delete actions
+        document.querySelectorAll('.btn-danger[data-confirm]').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to delete this item?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

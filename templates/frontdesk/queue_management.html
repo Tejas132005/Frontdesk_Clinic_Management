@@ -1,0 +1,168 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-list-ol"></i> Queue Management</h4>
+        <a href="{% url 'frontdesk:queue_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add to Queue
+        </a>
+    </div>
+
+    <!-- Queue Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Waiting</h6>
+                        <h2 class="mb-0">{{ stats.waiting }}</h2>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card primary">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">With Doctor</h6>
+                        <h2 class="mb-0">{{ stats.with_doctor }}</h2>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-person-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card success">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Completed</h6>
+                        <h2 class="mb-0">{{ stats.completed }}</h2>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="stat-card danger">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Today</h6>
+                        <h2 class="mb-0">{{ stats.total }}</h2>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Queue Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Today's Queue</span>
+            <button class="btn btn-sm btn-outline-primary" onclick="refreshQueue()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Queue #</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Arrival Time</th>
+                            <th>Wait Time</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for queue in queue_entries %}
+                        <tr class="{% if queue.priority == 'emergency' %}table-danger{% elif queue.priority == 'urgent' %}table-warning{% endif %}">
+                            <td><strong>{{ queue.queue_number }}</strong></td>
+                            <td>
+                                <strong>{{ queue.patient.get_full_name }}</strong><br>
+                                <small class="text-muted">{{ queue.patient.patient_id }}</small>
+                            </td>
+                            <td>
+                                {% if queue.doctor %} Dr. {{ queue.doctor.full_name }} {% else %}
+                                <span class="text-muted">Not Assigned</span> {% endif %}
+                            </td>
+                            <td>{{ queue.arrival_time|time:"g:i A" }}</td>
+                            <td>{{ queue.get_wait_time }} min</td>
+                            <td>
+                                <span class="badge priority-badge {{ queue.priority }}">
+                                    {{ queue.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if queue.status == 'waiting' %}
+                                <span class="badge bg-warning">Waiting</span> {% elif queue.status == 'with_doctor' %}
+                                <span class="badge bg-info">With Doctor</span> {% elif queue.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span> {% elif queue.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span> {% endif %}
+                            </td>
+                            <td>
+                                {% if queue.status == 'waiting' %}
+                                <form method="post" action="{% url 'frontdesk:queue_update_status' queue.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="with_doctor">
+                                    <button type="submit" class="btn btn-sm btn-info" title="Mark With Doctor">
+                                        <i class="bi bi-person-check"></i>
+                                    </button>
+                                </form>
+                                {% elif queue.status == 'with_doctor' %}
+                                <form method="post" action="{% url 'frontdesk:queue_update_status' queue.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="btn btn-sm btn-success" title="Mark Completed">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                </form>
+                                {% endif %} {% if queue.status in 'waiting,with_doctor' %}
+                                <form method="post" action="{% url 'frontdesk:queue_remove' queue.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Cancel" onclick="return confirm('Are you sure you want to cancel this queue entry?')">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                                <p class="text-muted mt-2">No patients in queue</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+    function refreshQueue() {
+        location.reload();
+    }
+
+    // Auto-refresh every 30 seconds
+    setInterval(refreshQueue, 30000);
+</script>
+{% endblock %}

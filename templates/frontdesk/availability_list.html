@@ -1,0 +1,129 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-clock"></i> Doctor Availability</h4>
+        <a href="{% url 'frontdesk:availability_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Availability Slot
+        </a>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <select name="doctor" class="form-select">
+                        <option value="">All Doctors</option>
+                        {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}" {% if request.GET.doctor == doctor.id|stringformat:"s" %}selected{% endif %}>
+                                Dr. {{ doctor.full_name }} - {{ doctor.specialization }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Availability Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Time Slot</th>
+                            <th>Max Appointments</th>
+                            <th>Booked</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for availability in availabilities %}
+                        <tr>
+                            <td>
+                                <strong>Dr. {{ availability.doctor.full_name }}</strong><br>
+                                <small class="text-muted">{{ availability.doctor.specialization }}</small>
+                            </td>
+                            <td>{{ availability.date|date:"M d, Y" }}</td>
+                            <td>
+                                {{ availability.start_time|time:"g:i A" }} - {{ availability.end_time|time:"g:i A" }}
+                            </td>
+                            <td>{{ availability.max_appointments }}</td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ availability.get_booked_slots }} / {{ availability.max_appointments }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if availability.is_available %} {% if availability.has_available_slots %}
+                                <span class="badge bg-success">Available</span> {% else %}
+                                <span class="badge bg-warning text-dark">Fully Booked</span> {% endif %} {% else %}
+                                <span class="badge bg-danger">Not Available</span> {% if availability.unavailability_reason %}
+                                <br><small class="text-muted">{{ availability.unavailability_reason }}</small> {% endif %} {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'frontdesk:availability_edit' availability.pk %}" class="btn btn-warning" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'frontdesk:availability_delete' availability.pk %}" class="btn btn-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bi bi-calendar-x" style="font-size: 48px; color: #ccc;"></i>
+                                <p class="text-muted mt-2">No availability slots found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.doctor %}&doctor={{ request.GET.doctor }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.doctor %}&doctor={{ request.GET.doctor }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.doctor %}&doctor={{ request.GET.doctor }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.doctor %}&doctor={{ request.GET.doctor }}{% endif %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
