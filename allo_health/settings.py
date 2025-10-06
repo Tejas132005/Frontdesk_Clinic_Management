@@ -13,7 +13,7 @@ SECRET_KEY = config("SECRET_KEY", default='django-insecure-dev-key-change-in-pro
 DEBUG = config("DEBUG", default=True, cast=bool)
 
 if os.getenv("RENDER"):
-    ALLOWED_HOSTS = ["allo_health-django.onrender.com", "127.0.0.1", "localhost"]
+    ALLOWED_HOSTS = ['frontdesk-clinic-management.onrender.com', '127.0.0.1', 'localhost']
 else:
     ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
