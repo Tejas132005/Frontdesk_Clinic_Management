@@ -150,7 +150,7 @@ class Queue(models.Model):
     )
     
     # Queue Information
-    queue_number = models.CharField(max_length=10, unique=True)
+    queue_number = models.CharField(max_length=15, unique=True)
     patient = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
