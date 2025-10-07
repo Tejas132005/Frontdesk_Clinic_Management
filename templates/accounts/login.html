@@ -73,11 +73,13 @@
         
         .login-container {
             flex: 1;
-            display: flex;
+            display: grid;
+            grid-template-columns: 3fr 9fr;
             align-items: center;
-            justify-content: center;
             padding: 40px 20px;
             min-height: calc(100vh - 200px);
+            column-gap: 24px;
+            justify-self: center;
         }
         
         .login-card {
@@ -88,6 +90,7 @@
             max-width: 440px;
             width: 100%;
             animation: slideUp 0.5s ease-out;
+            justify-self: center;
         }
         
         @keyframes slideUp {
@@ -258,6 +261,64 @@
 
     <!-- Login Container -->
     <div class="login-container">
+
+        <div class="login-data justify-content-center p-1">
+            <!-- Table -->
+            <br><br><br>
+            <table class="table">
+                <p style="font-family: 'Courier New', Courier, monospace;
+                font-weight: 300;
+                color: rgb(223, 204, 204);">
+                    These are the login information for frontdesk staff
+                </p>
+                <div style="font-family: 'Courier New', Courier, monospace;
+                font-weight: 300;
+                color: rgb(223, 204, 204);">
+                    [Demo Show to login quickly]
+                </div>
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Usrname</th>
+                        <th scope="col">Password</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">1</th>
+                        <td>reception1</td>
+                        <td>staff123</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">2</th>
+                        <td>reception2</td>
+                        <td>staff123</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">3</th>
+                        <td>reception3</td>
+                        <td>staff123</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">4</th>
+                        <td>reception4</td>
+                        <td>staff123</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">5</th>
+                        <td>reception5</td>
+                        <td>staff123</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">###</th>
+                        <td>admin [<span style="color: green;">for admin</span>]</td>
+                        <td>admin123</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
         <div class="login-card">
             <div class="login-header">
                 <div class="login-header-icon">
