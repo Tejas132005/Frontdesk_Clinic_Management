@@ -68,7 +68,14 @@ def staff_profile_view(request):
     """
     Staff profile view
     """
-    staff_profile = get_object_or_404(FrontDeskStaff, user=request.user)
+    try:
+        staff_profile = FrontDeskStaff.objects.get(user=request.user)
+    except FrontDeskStaff.DoesNotExist:
+        messages.error(
+            request, 
+            'Your staff profile is not complete. Please contact the administrator.'
+        )
+        return redirect('frontdesk:dashboard')
     
     context = {
         'staff_profile': staff_profile,

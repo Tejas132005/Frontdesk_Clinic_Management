@@ -207,4 +207,47 @@ class DoctorSchedule(models.Model):
 
     def __str__(self):
         return f"{self.doctor.full_name} - {self.get_day_of_week_display()} ({self.start_time}-{self.end_time})"
-        
+    
+    
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=CustomUser)
+def create_user_profile(sender, instance, created, **kwargs):
+    """
+    Automatically create FrontDeskStaff or Doctor profile when a user is created
+    """
+    if created:
+        if instance.user_type == 'staff':
+            # Check if profile doesn't already exist
+            if not FrontDeskStaff.objects.filter(user=instance).exists():
+                # Generate employee_id
+                staff_count = FrontDeskStaff.objects.count()
+                employee_id = f'EMP{staff_count + 1:04d}'
+                
+                FrontDeskStaff.objects.create(
+                    user=instance,
+                    employee_id=employee_id,
+                    shift='morning',
+                    department='Reception'
+                )
+                print(f"✅ Created FrontDeskStaff profile for {instance.username}")
+
+@receiver(post_save, sender=CustomUser)
+def save_user_profile(sender, instance, **kwargs):
+    """
+    Ensure profile exists even if created manually through admin
+    This handles cases where user_type is changed after creation
+    """
+    if instance.user_type == 'staff':
+        if not FrontDeskStaff.objects.filter(user=instance).exists():
+            staff_count = FrontDeskStaff.objects.count()
+            employee_id = f'EMP{staff_count + 1:04d}'
+            
+            FrontDeskStaff.objects.create(
+                user=instance,
+                employee_id=employee_id,
+                shift='morning',
+                department='Reception'
+            )
+            print(f"✅ Auto-created missing FrontDeskStaff profile for {instance.username}")
