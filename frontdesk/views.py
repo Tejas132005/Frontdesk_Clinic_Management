@@ -973,7 +973,7 @@ def patient_visit_history_view(request):
         )
     
     # Combine both lists into a unified format
-    visit_history = []
+    visit_history = [] 
     
     # Filter by visit type
     if visit_type == '' or visit_type == 'queue':

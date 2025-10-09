@@ -11,6 +11,8 @@ A comprehensive Django-based hospital management system designed for front desk 
 - Track allergies, chronic conditions, and current medications
 - Search and filter patients by ID, name, phone, or email
 - View patient appointment and queue history
+- Get patients visit history
+- Get the data in the csv format
 
 ### Appointment Scheduling
 - Schedule, reschedule, and cancel appointments
