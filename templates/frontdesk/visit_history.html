@@ -1,0 +1,243 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-clock-history"></i> Patient Visit History</h4>
+        <div>
+            <button class="btn btn-success" onclick="exportToCSV()">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export to CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Visits</h6>
+                    <h3 class="mb-0">{{ stats.total_visits }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Queue Visits</h6>
+                    <h3 class="mb-0">{{ stats.queue_visits }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Appointment Visits</h6>
+                    <h3 class="mb-0">{{ stats.appointment_visits }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Unique Patients</h6>
+                    <h3 class="mb-0">{{ stats.unique_patients }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Search Patient</label>
+                    <input type="text" name="search" class="form-control" placeholder="Name, ID, or Phone..." value="{{ request.GET.search }}">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Doctor</label>
+                    <select name="doctor" class="form-select">
+                        <option value="">All Doctors</option>
+                        {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}" 
+                                {% if request.GET.doctor == doctor.id|stringformat:"s" %}selected{% endif %}>
+                            Dr. {{ doctor.full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Visit Type</label>
+                    <select name="visit_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="queue" {% if request.GET.visit_type == "queue" %}selected{% endif %}>
+                            Queue
+                        </option>
+                        <option value="appointment" {% if request.GET.visit_type == "appointment" %}selected{% endif %}>
+                            Appointment
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Visit History Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="visit-history-table">
+                    <thead>
+                        <tr>
+                            <th>Visit Date</th>
+                            <th>Visit Type</th>
+                            <th>Patient ID</th>
+                            <th>Patient Name</th>
+                            <th>Age/Gender</th>
+                            <th>Phone</th>
+                            <th>Doctor</th>
+                            <th>Reason</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visit in page_obj %}
+                        <tr>
+                            <td>{{ visit.visit_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if visit.type == 'queue' %}
+                                <span class="badge bg-info">
+                                    <i class="bi bi-people"></i> Queue
+                                </span> {% else %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-calendar-check"></i> Appointment
+                                </span> {% endif %}
+                            </td>
+                            <td><strong>{{ visit.patient.patient_id }}</strong></td>
+                            <td>{{ visit.patient.get_full_name }}</td>
+                            <td>{{ visit.patient.get_age }} yrs / {{ visit.patient.get_gender_display }}</td>
+                            <td>{{ visit.patient.phone_number }}</td>
+                            <td>
+                                {% if visit.doctor %} Dr. {{ visit.doctor.full_name }}<br>
+                                <small class="text-muted">{{ visit.doctor.specialization }}</small> {% else %}
+                                <span class="text-muted">Not Assigned</span> {% endif %}
+                            </td>
+                            <td>
+                                <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ visit.reason }}">
+                                    {{ visit.reason|truncatewords:10 }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if visit.visit_time %} {{ visit.visit_time|time:"h:i A" }} {% else %} - {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'frontdesk:visit_detail' visit.type visit.id %}" class="btn btn-sm btn-primary" title="View Details">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                                <p class="text-muted mt-2">No visit history found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+    function exportToCSV() {
+        let table = document.getElementById('visit-history-table');
+        let csv = [];
+
+        // Get headers
+        let headers = [];
+        for (let th of table.querySelectorAll('thead th')) {
+            if (th.textContent !== 'Actions') {
+                headers.push(th.textContent.trim());
+            }
+        }
+        csv.push(headers.join(','));
+
+        // Get data rows
+        for (let row of table.querySelectorAll('tbody tr')) {
+            let rowData = [];
+            let cells = row.querySelectorAll('td');
+            for (let i = 0; i < cells.length - 1; i++) {
+                let cellText = cells[i].textContent.trim().replace(/\s+/g, ' ');
+                rowData.push('"' + cellText + '"');
+            }
+            if (rowData.length > 0) {
+                csv.push(rowData.join(','));
+            }
+        }
+
+        // Download CSV
+        let csvFile = new Blob([csv.join('\n')], {
+            type: 'text/csv'
+        });
+        let downloadLink = document.createElement('a');
+        downloadLink.download = 'visit_history_' + new Date().toISOString().split('T')[0] + '.csv';
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = 'none';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+</script>
+{% endblock %}

@@ -910,3 +910,163 @@ def dashboard_stats_ajax(request):
     }
     
     return JsonResponse(stats)
+
+
+# Patients History Details Code 
+
+@login_required
+@user_passes_test(is_staff_user)
+def patient_visit_history_view(request):
+    """
+    View all patients who have been checked by doctors (completed visits)
+    Includes both queue entries and appointments
+    """
+    from django.db.models import Q
+    
+    # Get completed queue entries
+    completed_queue_entries = Queue.objects.filter(
+        status='completed'
+    ).select_related('patient', 'doctor', 'added_by').order_by('-consultation_end_time')
+    
+    # Get completed appointments
+    completed_appointments = Appointment.objects.filter(
+        status='completed'
+    ).select_related('patient', 'doctor', 'scheduled_by').order_by('-consultation_end_time')
+    
+    # Filters
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    doctor_id = request.GET.get('doctor', '')
+    visit_type = request.GET.get('visit_type', '')
+    search_query = request.GET.get('search', '')
+    
+    # Apply date filters to queue
+    if date_from:
+        completed_queue_entries = completed_queue_entries.filter(queue_date__gte=date_from)
+    if date_to:
+        completed_queue_entries = completed_queue_entries.filter(queue_date__lte=date_to)
+    
+    # Apply date filters to appointments
+    if date_from:
+        completed_appointments = completed_appointments.filter(appointment_date__gte=date_from)
+    if date_to:
+        completed_appointments = completed_appointments.filter(appointment_date__lte=date_to)
+    
+    # Apply doctor filter
+    if doctor_id:
+        completed_queue_entries = completed_queue_entries.filter(doctor_id=doctor_id)
+        completed_appointments = completed_appointments.filter(doctor_id=doctor_id)
+    
+    # Apply search filter
+    if search_query:
+        completed_queue_entries = completed_queue_entries.filter(
+            Q(patient__patient_id__icontains=search_query) |
+            Q(patient__first_name__icontains=search_query) |
+            Q(patient__last_name__icontains=search_query) |
+            Q(patient__phone_number__icontains=search_query)
+        )
+        completed_appointments = completed_appointments.filter(
+            Q(patient__patient_id__icontains=search_query) |
+            Q(patient__first_name__icontains=search_query) |
+            Q(patient__last_name__icontains=search_query) |
+            Q(patient__phone_number__icontains=search_query)
+        )
+    
+    # Combine both lists into a unified format
+    visit_history = []
+    
+    # Filter by visit type
+    if visit_type == '' or visit_type == 'queue':
+        for queue_entry in completed_queue_entries:
+            visit_history.append({
+                'type': 'queue',
+                'id': queue_entry.id,
+                'patient': queue_entry.patient,
+                'doctor': queue_entry.doctor,
+                'visit_date': queue_entry.queue_date,
+                'visit_time': queue_entry.consultation_start_time.time() if queue_entry.consultation_start_time else None,
+                'end_time': queue_entry.consultation_end_time,
+                'reason': queue_entry.reason_for_visit,
+                'priority': queue_entry.get_priority_display(),
+                'notes': queue_entry.notes,
+                'queue_number': queue_entry.queue_number,
+                'wait_time': queue_entry.get_wait_time(),
+            })
+    
+    if visit_type == '' or visit_type == 'appointment':
+        for appointment in completed_appointments:
+            visit_history.append({
+                'type': 'appointment',
+                'id': appointment.id,
+                'patient': appointment.patient,
+                'doctor': appointment.doctor,
+                'visit_date': appointment.appointment_date,
+                'visit_time': appointment.appointment_time,
+                'end_time': appointment.consultation_end_time,
+                'reason': appointment.reason_for_visit,
+                'symptoms': appointment.symptoms,
+                'appointment_type': appointment.get_appointment_type_display(),
+                'notes': appointment.notes,
+                'appointment_id': appointment.appointment_id,
+                'duration': appointment.duration,
+            })
+    
+    # Sort by date (most recent first)
+    visit_history.sort(key=lambda x: (x['visit_date'], x['visit_time'] or timezone.now().time()), reverse=True)
+    
+    # Pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(visit_history, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Statistics
+    stats = {
+        'total_visits': len(visit_history),
+        'queue_visits': completed_queue_entries.count(),
+        'appointment_visits': completed_appointments.count(),
+        'unique_patients': len(set([v['patient'].id for v in visit_history])),
+    }
+    
+    context = {
+        'title': 'Patient Visit History',
+        'page_obj': page_obj,
+        'stats': stats,
+        'doctors': Doctor.objects.all(),
+        'is_paginated': page_obj.has_other_pages(),
+    }
+    
+    return render(request, 'frontdesk/visit_history.html', context)
+
+
+@login_required
+@user_passes_test(is_staff_user)
+def visit_detail_view(request, visit_type, pk):
+    """
+    View detailed information about a specific visit (queue or appointment)
+    """
+    if visit_type == 'queue':
+        visit = get_object_or_404(
+            Queue.objects.select_related('patient', 'doctor', 'added_by'),
+            pk=pk,
+            status='completed'
+        )
+        template = 'frontdesk/visit_detail_queue.html'
+    elif visit_type == 'appointment':
+        visit = get_object_or_404(
+            Appointment.objects.select_related('patient', 'doctor', 'scheduled_by'),
+            pk=pk,
+            status='completed'
+        )
+        template = 'frontdesk/visit_detail_appointment.html'
+    else:
+        messages.error(request, 'Invalid visit type')
+        return redirect('frontdesk:visit_history')
+    
+    context = {
+        'title': f'Visit Details - {visit.patient.get_full_name()}',
+        'visit': visit,
+        'visit_type': visit_type,
+    }
+    
+    return render(request, template, context)

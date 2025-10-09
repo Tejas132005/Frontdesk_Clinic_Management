@@ -44,4 +44,9 @@ urlpatterns = [
     path('api/appointments/available-slots/', views.get_available_slots_ajax, name='available_slots_ajax'),
     path('api/queue/stats/', views.queue_stats_ajax, name='queue_stats_ajax'),
     path('api/dashboard/stats/', views.dashboard_stats_ajax, name='dashboard_stats_ajax'),
+
+    # Visit History URLs
+    path('visits/history/', views.patient_visit_history_view, name='visit_history'),
+    path('visits/<str:visit_type>/<int:pk>/', views.visit_detail_view, name='visit_detail'),
+
 ]

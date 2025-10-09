@@ -40,6 +40,7 @@
             width: 250px;
             padding-top: 20px;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
         }
         
         .sidebar .brand {
@@ -127,6 +128,11 @@
             color: var(--danger-color);
         }
         
+        .stat-card.info .icon {
+            background-color: rgba(66, 153, 225, 0.1);
+            color: var(--info-color);
+        }
+        
         .card {
             border: none;
             border-radius: 10px;
@@ -181,6 +187,34 @@
             background-color: #fee2e2;
             color: #991b1b;
         }
+        /* Sidebar scrollbar styling */
+        
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        /* Nav section headers */
+        
+        .nav-section-header {
+            padding: 15px 20px 5px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+        }
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -193,25 +227,37 @@
             🏥 Allo Health
         </div>
         <nav class="nav flex-column">
+            <div class="nav-section-header">Main Menu</div>
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'frontdesk:dashboard' %}">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
-            <a class="nav-link {% if 'patient' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:patient_list' %}">
+
+            <div class="nav-section-header">Patient Management</div>
+            <a class="nav-link {% if 'patient' in request.resolver_match.url_name and 'visit' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:patient_list' %}">
                 <i class="bi bi-people"></i> Patients
             </a>
+            <a class="nav-link {% if 'visit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:visit_history' %}">
+                <i class="bi bi-clock-history"></i> Visit History
+            </a>
+
+            <div class="nav-section-header">Operations</div>
             <a class="nav-link {% if 'queue' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:queue_management' %}">
                 <i class="bi bi-list-ol"></i> Queue Management
             </a>
             <a class="nav-link {% if 'appointment' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:appointment_list' %}">
                 <i class="bi bi-calendar-check"></i> Appointments
             </a>
+
+            <div class="nav-section-header">Resources</div>
             <a class="nav-link {% if 'doctor' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'accounts:doctor_list' %}">
                 <i class="bi bi-person-badge"></i> Doctors
             </a>
             <a class="nav-link {% if 'availability' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'frontdesk:availability_list' %}">
                 <i class="bi bi-clock"></i> Availability
             </a>
-            <hr style="border-color: rgba(255,255,255,0.2);">
+
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 15px 20px;">
+
             <a class="nav-link" href="{% url 'accounts:profile' %}">
                 <i class="bi bi-person-circle"></i> My Profile
             </a>
